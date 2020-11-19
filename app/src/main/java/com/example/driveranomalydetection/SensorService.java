@@ -15,16 +15,21 @@ import android.widget.Toast;
 
 import com.example.driveranomalydetection.exception.SensorException;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
 
 public class SensorService extends Service implements SensorEventListener {
 
     private static final int DELAY = SensorManager.SENSOR_DELAY_NORMAL;
     private SensorManager sensorManager;
     Sensor accelerometerSensor, gyroscopeSensor, pressureSensor;
+    long timestamp;
 
     @Override
     public void onCreate() {
         Toast.makeText(this, "Sensor service started", Toast.LENGTH_SHORT).show();
+        timestamp = System.currentTimeMillis();
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -32,6 +37,7 @@ public class SensorService extends Service implements SensorEventListener {
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         registerSensors();
+
     }
 
     private void registerSensors() {
@@ -59,15 +65,15 @@ public class SensorService extends Service implements SensorEventListener {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
                 log = String.format("%d %f %f %f", event.timestamp, event.values[0], event.values[1], event.values[2]);
-                System.out.println(log);
+                writeToFile("AccelerometerLogs" + timestamp + ".csv", log, this);
                 break;
             case Sensor.TYPE_GYROSCOPE:
                 log = String.format("%d %f %f %f", event.timestamp, event.values[0], event.values[1], event.values[2]);
-                System.out.println(log);
+                writeToFile("GyroscopeLogs" + timestamp + ".csv", log, this);
                 break;
             case Sensor.TYPE_PRESSURE:
                 log = String.format("%d %f", event.timestamp, event.values[0]);
-                System.out.println(log);
+                writeToFile("PressureLogs" + timestamp + ".csv", log, this);
                 break;
             default:
                 throw new SensorException("Sensor Not Found");
@@ -78,5 +84,16 @@ public class SensorService extends Service implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    private void writeToFile(String filename, String data ,Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(filename, Context.MODE_APPEND));
+            outputStreamWriter.write(data + "\n");
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
