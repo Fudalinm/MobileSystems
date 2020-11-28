@@ -20,8 +20,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonStartClick(View v) {
-        Intent intent = new Intent(this, SensorService.class);
-        startService(intent);
+        Intent sensorService = new Intent(this, SensorService.class);
+        startService(sensorService);
         buttonStart.setEnabled(false);
     }
 

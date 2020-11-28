@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">DriverAnomalyDetection</string>
     <string name="start_log_sensors_data">Start log sensors data</string>
-    <string name="upload_logs">Upload Logs</string>
 </resources>
