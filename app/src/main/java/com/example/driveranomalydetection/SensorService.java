@@ -1,99 +1,141 @@
 package com.example.driveranomalydetection;
 
-
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.IBinder;
 
-
-import android.widget.Toast;
+import androidx.annotation.Nullable;
 
 import com.example.driveranomalydetection.exception.SensorException;
+import com.example.driveranomalydetection.sensor.SensorDataBatchProcessorImpl;
+import com.example.driveranomalydetection.sensor.SensorRawDataBatch;
+import com.example.driveranomalydetection.sensor.model.data.AccelerometerSensorData;
+import com.example.driveranomalydetection.sensor.model.data.GravitySensorData;
+import com.example.driveranomalydetection.sensor.model.data.GyroscopeSensorData;
+import com.example.driveranomalydetection.sensor.model.data.LinearAccelerationSensorData;
+import com.example.driveranomalydetection.sensor.model.data.RotationVectorSensorData;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
+import lombok.SneakyThrows;
+
+public class SensorService extends IntentService implements SensorEventListener {
+
+    private static final int SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL;
+    private static final int LOG_DELAY = 1000;
+
+    SensorManager sensorManager;
+    Sensor accelerometerSensor, gyroscopeSensor, gravitySensor, linearAccelerationSensor, RotationVectorSensor;
+    SensorDataBatchProcessorImpl sensorBatch = new SensorDataBatchProcessorImpl();
+    AccelerometerSensorData accelerometerSensorData;
+    GravitySensorData gravitySensorData;
+    GyroscopeSensorData gyroscopeSensorData;
+    LinearAccelerationSensorData linearAccelerationSensorData;
+    RotationVectorSensorData rotationVectorSensorData;
+
+    ArrayList<AccelerometerSensorData> accelerometerSensorDataList = new ArrayList<>();
+    ArrayList<GravitySensorData> gravitySensorDataList = new ArrayList<>();
+    ArrayList<GyroscopeSensorData> gyroscopeSensorDataList = new ArrayList<>();
+    ArrayList<LinearAccelerationSensorData> linearAccelerationSensorDataList = new ArrayList<>();
+    ArrayList<RotationVectorSensorData> rotationVectorSensorDataList = new ArrayList<>();
 
 
-public class SensorService extends Service implements SensorEventListener {
-
-    private static final int DELAY = SensorManager.SENSOR_DELAY_NORMAL;
-    private SensorManager sensorManager;
-    Sensor accelerometerSensor, gyroscopeSensor, pressureSensor;
-    long timestamp;
+    public SensorService() {
+        super("SensorService");
+    }
 
     @Override
-    public void onCreate() {
-        Toast.makeText(this, "Sensor service started", Toast.LENGTH_SHORT).show();
-        timestamp = System.currentTimeMillis();
-
+    protected void onHandleIntent(@Nullable Intent intent) {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        linearAccelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        RotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         registerSensors();
+        batchScheduler();
+    }
 
+    private void batchScheduler() {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while(true) {
+                        sleep(LOG_DELAY);
+                        long batchTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - LOG_DELAY;
+                        sensorBatch.prepareBatch(SensorRawDataBatch.builder()
+                                .batchTimestamp(batchTimestamp)
+                                .accelerometerSensorDataList(accelerometerSensorDataList)
+                                .gravitySensorDataList(gravitySensorDataList)
+                                .gyroscopeSensorDataList(gyroscopeSensorDataList)
+                                .linearAccelerationSensorDataList(linearAccelerationSensorDataList)
+                                .rotationVectorSensorDataList(rotationVectorSensorDataList)
+                                .build()
+                        );
+                        clear();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+    }
+
+    public void clear() {
+        accelerometerSensorDataList.clear();
+        gravitySensorDataList.clear();
+        gyroscopeSensorDataList.clear();
+        linearAccelerationSensorDataList.clear();
+        rotationVectorSensorDataList.clear();
     }
 
     private void registerSensors() {
-        sensorManager.registerListener(this, accelerometerSensor, DELAY);
-        sensorManager.registerListener(this, gyroscopeSensor, DELAY);
-        sensorManager.registerListener(this, pressureSensor, DELAY);
+        sensorManager.registerListener(this, accelerometerSensor, SENSOR_DELAY);
+        sensorManager.registerListener(this, gyroscopeSensor, SENSOR_DELAY);
+        sensorManager.registerListener(this, gravitySensor, SENSOR_DELAY);
+        sensorManager.registerListener(this, linearAccelerationSensor, SENSOR_DELAY);
+        sensorManager.registerListener(this, RotationVectorSensor, SENSOR_DELAY);
     }
 
 
-    @Override
-    public void onDestroy() {
-        Toast.makeText(this, "Sensor service stopped", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
+    @SneakyThrows
     @Override
     public void onSensorChanged(SensorEvent event) {
-
-        String log;
-
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                log = String.format("%d %f %f %f", event.timestamp, event.values[0], event.values[1], event.values[2]);
-                writeToFile("AccelerometerLogs" + timestamp + ".csv", log, this);
+                accelerometerSensorData = new AccelerometerSensorData(event.timestamp, event.values[0], event.values[1], event.values[2]);
+                accelerometerSensorDataList.add(accelerometerSensorData);
                 break;
             case Sensor.TYPE_GYROSCOPE:
-                log = String.format("%d %f %f %f", event.timestamp, event.values[0], event.values[1], event.values[2]);
-                writeToFile("GyroscopeLogs" + timestamp + ".csv", log, this);
+                gyroscopeSensorData = new GyroscopeSensorData(event.timestamp, event.values[0], event.values[1], event.values[2]);
+                gyroscopeSensorDataList.add(gyroscopeSensorData);
                 break;
-            case Sensor.TYPE_PRESSURE:
-                log = String.format("%d %f", event.timestamp, event.values[0]);
-                writeToFile("PressureLogs" + timestamp + ".csv", log, this);
+            case Sensor.TYPE_GRAVITY:
+                gravitySensorData = new GravitySensorData(event.timestamp, event.values[0], event.values[1], event.values[2]);
+                gravitySensorDataList.add(gravitySensorData);
+                break;
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                linearAccelerationSensorData = new LinearAccelerationSensorData(event.timestamp, event.values[0], event.values[1], event.values[2]);
+                linearAccelerationSensorDataList.add(linearAccelerationSensorData);
+                break;
+            case Sensor.TYPE_ROTATION_VECTOR:
+                rotationVectorSensorData = new RotationVectorSensorData(event.timestamp, event.values[0], event.values[1], event.values[2]);
+                rotationVectorSensorDataList.add(rotationVectorSensorData);
                 break;
             default:
                 throw new SensorException("Sensor Not Found");
         }
-
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    private void writeToFile(String filename, String data ,Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(filename, Context.MODE_APPEND));
-            outputStreamWriter.write(data + "\n");
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
