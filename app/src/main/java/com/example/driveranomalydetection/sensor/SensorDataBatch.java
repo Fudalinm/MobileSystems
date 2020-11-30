@@ -14,4 +14,8 @@ import lombok.NoArgsConstructor;
 public class SensorDataBatch {
     Long batchTimestamp;
     ArrayList<SensorDataBatchRow> rows;
+
+    public ArrayList<SensorDataBatchRow> getRows() {
+        return rows;
+    }
 }

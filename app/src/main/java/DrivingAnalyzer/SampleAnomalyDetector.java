@@ -4,6 +4,7 @@ import android.content.Context;
 import android.location.LocationListener;
 import android.util.Log;
 
+import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,9 +42,6 @@ public class SampleAnomalyDetector implements AnomalyDetector {
     }
 
 
-
-
-
     public SampleAnomalyDetector(){
 
     }
@@ -72,23 +70,14 @@ public class SampleAnomalyDetector implements AnomalyDetector {
 
 
     @Override
-    public boolean putData() {
-
-        Log.e("xDDD","Creating ");
+    public boolean putData(SensorDataBatch sensorDataBatch) {
         String wholeFile = readFromFile();
         this.accelerations = new Accelerations(wholeFile);
-
-        Log.e("xDDD","Created");
-        Log.e("xDDD",this.accelerations.x.toString());
-        Log.e("xDDD",this.accelerations.y.toString());
-        Log.e("xDDD",this.accelerations.z.toString());
-
-
         return true;
     }
 
     @Override
-    public List<AnomalyType> detectAnomaly() {
+    public List<AnomalyType> detectAnomalyType(SensorDataBatch sensorDataBatch) {
         LinkedList<AnomalyType> anomalyTypes = new LinkedList<AnomalyType>();
 
         List<Boolean> outx = detectOutliers(this.accelerations.x);
@@ -100,12 +89,18 @@ public class SampleAnomalyDetector implements AnomalyDetector {
                     outx.get(i) || outy.get(i)  || outz.get(i)  ? AnomalyType.Yes : AnomalyType.No
             );
         }
-
-
-
-
-
         return anomalyTypes;
+    }
+
+    @Override
+    public List<AnomalyTypeSpecific> detectAnomalyTypeSpecific(SensorDataBatch sensorDataBatch) {
+        return null;
+    }
+
+    @Override
+    public void forceModelUpdate() {
+
+        return;
     }
 
     public static List<Boolean> detectOutliers(List<Float> allNumbers)
