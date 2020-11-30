@@ -31,17 +31,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonStartClick(View v) {
-        Intent intent = new Intent(this, SensorService.class);
-        startService(intent);
+        Intent sensorService = new Intent(this, SensorService.class);
+        startService(sensorService);
         buttonStart.setEnabled(false);
     }
 
     public void buttonDetectAnomaly(View v){
         /* Run class for anomaly detection */
         Log.i("DoesItWork?","It of IS :3");
-        anomalyDetector.putData();
+        anomalyDetector.putData(null);
         Log.i("DoesItWork?","It of IS :3");
-        List<AnomalyType> anomalies = anomalyDetector.detectAnomaly();
+        List<AnomalyType> anomalies = anomalyDetector.detectAnomalyType(null);
         Log.i("DoesItWork?",anomalies.toString());
     }
 
