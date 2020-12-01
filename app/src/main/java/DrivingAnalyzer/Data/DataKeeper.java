@@ -18,6 +18,7 @@ public class DataKeeper {
     private Map<DataType,Double[]> mean = new HashMap<>();
     private Map<DataType,Double[]> std = new HashMap<>();
 
+    /** TODO: Add to constructor which statistics are vital for the anomaly detection model not to make */
     public DataKeeper(){
         for(DataType dt:DataType.values()){
             this.mean.put(dt,new Double[dt.getDim()]);
@@ -25,10 +26,8 @@ public class DataKeeper {
         }
     }
 
-
     public int putData(SensorDataBatch sensorDataBatch){
         List<SensorDataBatchRow> sensorDataBatchRows = sensorDataBatch.getRows();
-        int inputLength = sensorDataBatchRows.size();
 
         for(SensorDataBatchRow s: sensorDataBatchRows){
             data.add(new SimpleTimestampData(s));
@@ -59,7 +58,7 @@ public class DataKeeper {
 
         for(int i=lastStatisticUpdate;i<this.dataLength;i++){
             for(int j = 0;j<dt.getDim();j++){
-                newMean[j] += this.data.get(i).timestampData.get(dt).logs[j];
+                newMean[j] += this.data.get(i).timestampSensorDataMap.get(dt).logs[j];
             }
         }
         for(int j=0;j<dt.getDim();j++){
@@ -69,7 +68,7 @@ public class DataKeeper {
         Double[] newStd = new Double[dt.getDim()];
         for(int i=lastStatisticUpdate;i<this.dataLength;i++) {
             for(int j = 0;j<dt.getDim();j++){
-                newStd[j] += Math.pow(newMean[j] - this.data.get(i).timestampData.get(dt).logs[j],2);
+                newStd[j] += Math.pow(newMean[j] - this.data.get(i).timestampSensorDataMap.get(dt).logs[j],2);
             }
         }
         for(int j = 0;j<dt.getDim();j++){
@@ -94,4 +93,18 @@ public class DataKeeper {
         this.updateStatistics();
     }
 
+    /** TODO: maybe add list of statistics needed  */
+    public Map<String,Double[]> getStatistics(DataType dt){
+        Map<String,Double[]> map = new HashMap<>();
+        map.put("std",this.std.get(dt));
+        map.put("mean",this.mean.get(dt));
+        return map;
+    }
+
+    public Map<String,Map<DataType,Double[]>> getAllStatistics(){
+        Map<String,Map<DataType,Double[]>> map = new HashMap<>();
+        map.put("mean",this.mean);
+        map.put("std",this.std);
+        return map;
+    }
 }
