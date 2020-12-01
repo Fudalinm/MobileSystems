@@ -1,9 +1,5 @@
 package DrivingAnalyzer;
 
-import android.content.Context;
-import android.location.LocationListener;
-import android.util.Log;
-
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,10 +7,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.LinkedList;
 import java.lang.Math;
 import java.util.List;
+
+import DrivingAnalyzer.Data.TimestampAnomalyMark;
+import DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
 
 public class SampleAnomalyDetector implements AnomalyDetector {
     private Accelerations accelerations;
@@ -70,15 +68,15 @@ public class SampleAnomalyDetector implements AnomalyDetector {
 
 
     @Override
-    public boolean putData(SensorDataBatch sensorDataBatch) {
+    public int putData(SensorDataBatch sensorDataBatch) {
         String wholeFile = readFromFile();
         this.accelerations = new Accelerations(wholeFile);
-        return true;
+        return 0;
     }
 
     @Override
-    public List<AnomalyType> detectAnomalyType(SensorDataBatch sensorDataBatch) {
-        LinkedList<AnomalyType> anomalyTypes = new LinkedList<AnomalyType>();
+    public List<TimestampAnomalyMark> detectAnomalyType(SensorDataBatch sensorDataBatch) {
+        LinkedList<TimestampAnomalyMark> anomalyTypes = new LinkedList<TimestampAnomalyMark>();
 
         List<Boolean> outx = detectOutliers(this.accelerations.x);
         List<Boolean> outy = detectOutliers(this.accelerations.y);
@@ -86,14 +84,18 @@ public class SampleAnomalyDetector implements AnomalyDetector {
 
         for(int i=0;i<outx.size();i++){
             anomalyTypes.add(
-                    outx.get(i) || outy.get(i)  || outz.get(i)  ? AnomalyType.Yes : AnomalyType.No
+                    new TimestampAnomalyMark(
+                            i
+                            ,
+                        outx.get(i) || outy.get(i)  || outz.get(i)  ? AnomalyType.Yes : AnomalyType.No
+                        )
             );
         }
         return anomalyTypes;
     }
 
     @Override
-    public List<AnomalyTypeSpecific> detectAnomalyTypeSpecific(SensorDataBatch sensorDataBatch) {
+    public List<TimestampSpecificAnomalyMark> detectAnomalyTypeSpecific(SensorDataBatch sensorDataBatch) {
         return null;
     }
 
