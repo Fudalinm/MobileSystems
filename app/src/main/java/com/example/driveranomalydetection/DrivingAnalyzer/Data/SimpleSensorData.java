@@ -1,4 +1,4 @@
-package DrivingAnalyzer.Data;
+package com.example.driveranomalydetection.DrivingAnalyzer.Data;
 
 import java.util.List;
 

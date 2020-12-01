@@ -1,4 +1,4 @@
-package DrivingAnalyzer;
+package com.example.driveranomalydetection.DrivingAnalyzer;
 
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import com.example.driveranomalydetection.sensor.SensorDataBatchRow;
@@ -8,12 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import DrivingAnalyzer.Data.DataKeeper;
-import DrivingAnalyzer.Data.DataType;
-import DrivingAnalyzer.Data.SimpleSensorData;
-import DrivingAnalyzer.Data.SimpleTimestampData;
-import DrivingAnalyzer.Data.TimestampAnomalyMark;
-import DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.DataKeeper;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.DataType;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.SimpleSensorData;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.SimpleTimestampData;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
 
 public class GaussianAnomalyDetector implements AnomalyDetector{
     private DataKeeper data;

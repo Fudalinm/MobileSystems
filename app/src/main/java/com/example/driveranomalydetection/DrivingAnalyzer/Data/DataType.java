@@ -1,4 +1,4 @@
-package DrivingAnalyzer.Data;
+package com.example.driveranomalydetection.DrivingAnalyzer.Data;
 
 public enum DataType {
     accelerometerSensorData         (3,"accelerometer"),

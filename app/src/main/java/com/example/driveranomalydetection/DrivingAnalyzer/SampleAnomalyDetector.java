@@ -1,4 +1,4 @@
-package DrivingAnalyzer;
+package com.example.driveranomalydetection.DrivingAnalyzer;
 
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import java.io.BufferedReader;
@@ -11,8 +11,8 @@ import java.util.LinkedList;
 import java.lang.Math;
 import java.util.List;
 
-import DrivingAnalyzer.Data.TimestampAnomalyMark;
-import DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
 
 public class SampleAnomalyDetector implements AnomalyDetector {
     private Accelerations accelerations;

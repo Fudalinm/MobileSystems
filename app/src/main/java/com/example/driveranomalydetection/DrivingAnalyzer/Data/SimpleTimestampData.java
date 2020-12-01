@@ -1,4 +1,4 @@
-package DrivingAnalyzer.Data;
+package com.example.driveranomalydetection.DrivingAnalyzer.Data;
 
 import com.example.driveranomalydetection.sensor.SensorDataBatchRow;
 

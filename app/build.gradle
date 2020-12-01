@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+
     compileSdkVersion 29
 
     defaultConfig {
@@ -25,6 +26,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    configurations {
+        all {
+            exclude group: "nz.ac.waikato.cms.weka.thirdparty", module: "java-cup-11b"
+        }
+    }
+
 }
 
 dependencies {
@@ -36,6 +43,8 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'com.opencsv:opencsv:5.3'
+    implementation group: 'nz.ac.waikato.cms.weka', name: 'weka-stable', version: '3.8.0'
 }
 
 /*

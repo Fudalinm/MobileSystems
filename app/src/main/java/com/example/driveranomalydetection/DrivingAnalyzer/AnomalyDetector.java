@@ -1,10 +1,10 @@
-package DrivingAnalyzer;
+package com.example.driveranomalydetection.DrivingAnalyzer;
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 
 import java.util.List;
 
-import DrivingAnalyzer.Data.TimestampAnomalyMark;
-import DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
 
 public interface AnomalyDetector {
     public int putData(SensorDataBatch sensorDataBatch);

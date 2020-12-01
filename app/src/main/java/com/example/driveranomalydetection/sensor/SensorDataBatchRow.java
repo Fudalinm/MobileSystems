@@ -7,7 +7,7 @@ import com.example.driveranomalydetection.sensor.model.data.LinearAccelerationSe
 import com.example.driveranomalydetection.sensor.model.data.RotationVectorSensorData;
 
 import java.util.List;
-import DrivingAnalyzer.Data.DataType;
+import com.example.driveranomalydetection.DrivingAnalyzer.Data.DataType;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,8 +1,8 @@
-package DrivingAnalyzer.Data;
+package com.example.driveranomalydetection.DrivingAnalyzer.Data;
 
 import java.util.Map;
 
-import DrivingAnalyzer.AnomalyType;
+import com.example.driveranomalydetection.DrivingAnalyzer.AnomalyType;
 
 public class TimestampSpecificAnomalyMark {
     private long timestamp;

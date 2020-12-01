@@ -1,4 +1,4 @@
-package DrivingAnalyzer;
+package com.example.driveranomalydetection.DrivingAnalyzer;
 
 
 public interface DrivingAnalyzer {
