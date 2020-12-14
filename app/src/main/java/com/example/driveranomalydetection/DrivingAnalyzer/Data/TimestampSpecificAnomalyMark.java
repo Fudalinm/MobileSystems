@@ -1,5 +1,6 @@
 package com.example.driveranomalydetection.DrivingAnalyzer.Data;
 
+import java.sql.Timestamp;
 import java.util.Map;
 
 import com.example.driveranomalydetection.DrivingAnalyzer.AnomalyType;
@@ -20,5 +21,13 @@ public class TimestampSpecificAnomalyMark {
         }
         this.fAnyAnomaly = fa;
         this.map = map;
+    }
+
+    public Float getValue() {
+        return new Float(0.5);
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 }

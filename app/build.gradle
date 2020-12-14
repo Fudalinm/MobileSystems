@@ -34,6 +34,10 @@ android {
 
 }
 
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.16'
     annotationProcessor 'org.projectlombok:lombok:1.18.16'
@@ -45,6 +49,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'com.opencsv:opencsv:5.3'
     implementation group: 'nz.ac.waikato.cms.weka', name: 'weka-stable', version: '3.8.0'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 }
 
 /*
