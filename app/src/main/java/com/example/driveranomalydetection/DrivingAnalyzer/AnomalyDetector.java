@@ -8,6 +8,8 @@ import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecific
 
 public interface AnomalyDetector {
     public int putData(SensorDataBatch sensorDataBatch);
+    public int loadDataFromFile(String filePath);
+    public List<TimestampSpecificAnomalyMark> predictForWholeData();
     public List<TimestampAnomalyMark> detectAnomalyType(SensorDataBatch sensorDataBatch);
     public List<TimestampSpecificAnomalyMark> detectAnomalyTypeSpecific(SensorDataBatch sensorDataBatch);
     public void forceModelUpdate();

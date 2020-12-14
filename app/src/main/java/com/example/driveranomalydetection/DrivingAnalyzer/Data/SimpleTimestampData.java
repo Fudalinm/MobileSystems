@@ -18,6 +18,11 @@ public class SimpleTimestampData {
         }
     }
 
+    public SimpleTimestampData(Long timestamp, Map<DataType,SimpleSensorData> sensorLogs){
+        this.timestamp = timestamp;
+        this.timestampSensorDataMap = sensorLogs;
+    }
+
     public Long getTimestamp() {
         return timestamp;
     }

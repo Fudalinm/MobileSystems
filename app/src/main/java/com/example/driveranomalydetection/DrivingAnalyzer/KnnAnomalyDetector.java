@@ -83,6 +83,16 @@ public class KnnAnomalyDetector implements AnomalyDetector{
     }
 
     @Override
+    public int loadDataFromFile(String filePath) {
+        return 0;
+    }
+
+    @Override
+    public List<TimestampSpecificAnomalyMark> predictForWholeData() {
+        return null;
+    }
+
+    @Override
     public List<TimestampAnomalyMark> detectAnomalyType(SensorDataBatch sensorDataBatch) {
         Classifier knn = knnClasification();
         return null;

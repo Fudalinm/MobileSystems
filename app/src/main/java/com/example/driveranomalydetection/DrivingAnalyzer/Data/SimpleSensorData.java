@@ -14,6 +14,14 @@ public class SimpleSensorData {
         }
     }
 
+    public SimpleSensorData(DataType dt, Float[] logs){
+        this.dt = dt;
+        this.logs = new Float[dt.getDim()];
+        for(int i=0;i<this.dt.getDim();i++){
+            this.logs[i] = logs[i];
+        }
+    }
+
     public DataType getDataType(){
         return this.dt;
     }

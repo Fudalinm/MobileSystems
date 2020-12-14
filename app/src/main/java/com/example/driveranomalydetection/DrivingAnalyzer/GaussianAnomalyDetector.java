@@ -1,10 +1,13 @@
 package com.example.driveranomalydetection.DrivingAnalyzer;
 
+import android.util.Log;
+
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import com.example.driveranomalydetection.sensor.SensorDataBatchRow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,13 +25,19 @@ public class GaussianAnomalyDetector implements AnomalyDetector{
     private Double anomalyBound;
 
     public GaussianAnomalyDetector(){
-        this.anomalyBound = 2.4;
+        this.anomalyBound = 2.3;
         this.data = new DataKeeper();
     }
 
     @Override
     public int putData(SensorDataBatch sensorDataBatch) {
         return this.data.putData(sensorDataBatch);
+    }
+
+    /** Example filePath "/data/data/com.example.driveranomalydetection/files/tmp3.csv" */
+    @Override
+    public int loadDataFromFile(String filePath) {
+        return this.data.loadDataFromFile(filePath);
     }
 
     @Override
@@ -65,6 +74,33 @@ public class GaussianAnomalyDetector implements AnomalyDetector{
             }
         }
         return AnomalyType.No;
+    }
+
+    private TimestampSpecificAnomalyMark fAnomalyTimestampSpecific(SimpleTimestampData data,Map<String,Map<DataType,Double[]>> stats){
+        Long time = data.getTimestamp();
+        Map<DataType, AnomalyType> anomalyTypeMap = new HashMap<>();
+        Map<DataType, SimpleSensorData> commonSensorDataMap = new HashMap<>();
+
+        for(SimpleSensorData s: data.getTimestampSensorDataMap().values()){
+            commonSensorDataMap.put(s.getDataType(),s);
+            if( fAnomalySensor(s,stats) == AnomalyType.Yes) {
+                anomalyTypeMap.put(s.getDataType(),AnomalyType.Yes);
+            }else {
+                anomalyTypeMap.put(s.getDataType(),AnomalyType.No);
+            }
+        }
+        return new TimestampSpecificAnomalyMark(time,anomalyTypeMap,commonSensorDataMap);
+    }
+
+    @Override
+    public List<TimestampSpecificAnomalyMark> predictForWholeData(){
+        Map<String,Map<DataType,Double[]>> stats = this.data.getAllStatistics();
+        Log.e("GAD",stats.toString());
+        List<TimestampSpecificAnomalyMark> wholeAnomalies = new ArrayList<>(this.data.getData().size());
+        for (SimpleTimestampData std : this.data.getData()){
+            wholeAnomalies.add(fAnomalyTimestampSpecific(std,stats));
+        }
+        return wholeAnomalies;
     }
 
     /* Detect anomaly in whole timestamp */
@@ -104,7 +140,7 @@ public class GaussianAnomalyDetector implements AnomalyDetector{
             for(DataType dt:map.keySet()){
                 mapAnomaly.put(dt,fAnomalySensor(map.get(dt),stats));
             }
-            TimestampSpecificAnomalyMark tsam = new TimestampSpecificAnomalyMark(t,mapAnomaly);
+            TimestampSpecificAnomalyMark tsam = new TimestampSpecificAnomalyMark(t,mapAnomaly,map);
             toRet.add(tsam);
         }
         return toRet;

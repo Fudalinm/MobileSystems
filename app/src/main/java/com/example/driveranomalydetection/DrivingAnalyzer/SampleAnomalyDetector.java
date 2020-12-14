@@ -66,6 +66,31 @@ public class SampleAnomalyDetector implements AnomalyDetector {
         return aBuffer;
     }
 
+    public int loadDataFromFile(String s) {
+        String testFile = "/data/data/com.example.driveranomalydetection/files/tmp3.csv";
+        String aBuffer = "";
+        try {
+            File myFile = new File(testFile);
+            FileInputStream fIn = new FileInputStream(myFile);
+            BufferedReader myReader = new BufferedReader(new InputStreamReader(fIn));
+            String aDataRow = "";
+            while ((aDataRow = myReader.readLine()) != null) {
+                aBuffer += aDataRow + '\n';
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 1;
+    }
+
+    @Override
+    public List<TimestampSpecificAnomalyMark> predictForWholeData() {
+        return null;
+    }
+
 
     @Override
     public int putData(SensorDataBatch sensorDataBatch) {
