@@ -50,4 +50,5 @@ dependencies {
     implementation 'com.opencsv:opencsv:5.3'
     implementation group: 'nz.ac.waikato.cms.weka', name: 'weka-stable', version: '3.8.0'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'pub.devrel:easypermissions:3.0.0'
 }
