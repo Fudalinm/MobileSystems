@@ -2,6 +2,7 @@ package com.example.driveranomalydetection;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -15,10 +16,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import com.example.driveranomalydetection.DrivingAnalyzer.AnomalyDetector;
 import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampAnomalyMark;
@@ -27,7 +28,13 @@ import com.example.driveranomalydetection.DrivingAnalyzer.GaussianAnomalyDetecto
 import com.example.driveranomalydetection.DrivingAnalyzer.GraphView;
 import com.example.driveranomalydetection.DrivingAnalyzer.KnnAnomalyDetector;
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
+import com.example.driveranomalydetection.sensor.SensorFileProcessor;
+import com.example.driveranomalydetection.sensor.SensorFileProcessorImpl;
 import com.github.mikephil.charting.charts.LineChart;
+
+import pub.devrel.easypermissions.EasyPermissions;
+
+import static java.lang.Thread.sleep;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -40,11 +47,13 @@ public class MainActivity extends AppCompatActivity {
     LineChart chart;
     GraphView graphView;
     static final Integer PICK_FILE_REQUEST = 2;
+    static final Integer FILE_BATCH_DELAY = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        requestPermissions();
         anomalyDetector = new GaussianAnomalyDetector();
         anomalyDetector.loadDataFromFile("/data/data/com.example.driveranomalydetection/files/SampleData.csv");
 //        List<TimestampSpecificAnomalyMark> tmp = anomalyDetector.predictForWholeData(); Function for test purpose it might disappear in the future
@@ -59,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     public void openFile(View view) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/csv");
+        intent.setType("*/*");
         startActivityForResult(intent, PICK_FILE_REQUEST);
     }
 
@@ -67,33 +76,24 @@ public class MainActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode,
                                  Intent resultData) {
         super.onActivityResult(requestCode, resultCode, resultData);
-        if (requestCode == PICK_FILE_REQUEST
-                && resultCode == Activity.RESULT_OK) {
+        if (requestCode == PICK_FILE_REQUEST && resultCode == Activity.RESULT_OK) {
             Uri uri = null;
             if (resultData != null) {
-                uri = resultData.getData();
-                try {
-                    String fileText = readTextFromUri(uri);
-                    //TODO: detectAnomaly(createSenorBatchDataFromString(fileText))
-                } catch (IOException e){
-                    e.printStackTrace();
-                }
+                loadBatchFile(resultData);
             }
         }
     }
 
-    private String readTextFromUri(Uri uri) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        try (InputStream inputStream =
-                     getContentResolver().openInputStream(uri);
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
+    private ArrayList<String> readTextFromUri(Uri uri) throws IOException {
+        ArrayList<String> lines = new ArrayList<>();
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream)))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
+                lines.add(line);
             }
         }
-        return stringBuilder.toString();
+        return lines;
     }
 
     public void handleMenuSwitch(View v){
@@ -124,5 +124,59 @@ public class MainActivity extends AppCompatActivity {
         List<TimestampAnomalyMark> anomalies = anomalyDetector.detectAnomalyType(batch);
         List<TimestampSpecificAnomalyMark> data = anomalyDetector.detectAnomalyTypeSpecific(batch);
         graphView.draw(data);
+    }
+
+    private void loadBatchFile(Intent resultData) {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                Uri uri;
+                uri = resultData.getData();
+
+                ArrayList<String> lines = new ArrayList<>();
+                try {
+                    lines = readTextFromUri(uri);
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                }
+                SensorFileProcessor sensorFileProcessor = new SensorFileProcessorImpl();
+                ArrayList<SensorDataBatch> sensorDataBatches = sensorFileProcessor.parseCsv(lines);
+                fileBatchScheduler(sensorDataBatches);
+            }
+        };
+        thread.start();
+    }
+
+    private void fileBatchScheduler(ArrayList<SensorDataBatch> sensorDataBatches) {
+        try {
+            for(SensorDataBatch batch : sensorDataBatches) {
+                sleep(FILE_BATCH_DELAY);
+                long batchTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+                batch.setBatchTimestamp(batchTimestamp);
+                detectAnomaly(batch);
+            }
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
+    private void requestPermissions() {
+        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission_group.STORAGE,
+                Manifest.permission_group.SENSORS};
+        if (EasyPermissions.hasPermissions(this, perms)) {
+            // do nothing
+        } else {
+            EasyPermissions.requestPermissions(this, "Please grant permissions.", 140, perms);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 }
