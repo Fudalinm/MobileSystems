@@ -3,7 +3,4 @@
     <item
         android:id="@+id/one"
         android:title="Gaussian outliers" />
-    <item
-        android:id="@+id/two"
-        android:title="k-NN outliers"/>
 </menu>

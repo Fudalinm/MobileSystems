@@ -23,10 +23,6 @@ public class TimestampSpecificAnomalyMark {
         this.commonSensorDataMap = dataMap;
     }
 
-    public Float getValue() {
-        return new Float(0.5);
-    }
-
     public long getTimestamp() {
         return timestamp;
     }

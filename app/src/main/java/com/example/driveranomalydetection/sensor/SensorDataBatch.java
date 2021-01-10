@@ -18,4 +18,7 @@ public class SensorDataBatch {
     public ArrayList<SensorDataBatchRow> getRows() {
         return rows;
     }
+    public void setBatchTimestamp(long timestamp) {
+        this.batchTimestamp = timestamp;
+    }
 }
