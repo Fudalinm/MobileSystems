@@ -54,22 +54,22 @@ public class KnnAnomalyDetector implements AnomalyDetector{
         return data;
     }
 
-//    public Instances getDataSet(){
-//        int classIdx = 1;
-//        try {
-//            CSVLoader loader = new CSVLoader();
-//            String[] options = new String[1];
-//            options[0] = "-H";
-//            loader.setOptions(options);
-//            loader.setSource(new File(dataSource));
-//            Instances dataSet = loader.getDataSet();
-//            dataSet.setClassIndex(classIdx);
-//            return dataSet;
-//        } catch (Exception e){
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
+    public Instances getDataSet(){
+        int classIdx = 1;
+        try {
+            CSVLoader loader = new CSVLoader();
+            String[] options = new String[1];
+            options[0] = "-H";
+            loader.setOptions(options);
+            loader.setSource(new File(dataSource));
+            Instances dataSet = loader.getDataSet();
+            dataSet.setClassIndex(classIdx);
+            return dataSet;
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     @Override
     public int putData(SensorDataBatch sensorDataBatch) {
