@@ -8,9 +8,12 @@ import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampAnomalyM
 import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
 import com.example.driveranomalydetection.R;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
@@ -58,6 +61,8 @@ public class GraphView {
     List<Entry> rotationVectorZ;
     List<Entry> rotationVectorAnomalies;
 
+    Integer axis_size;
+
     public GraphView(LineChart accChart, LineChart gravChart, LineChart gyroChart, LineChart linChart, LineChart rotChart) {
         this.accChart = accChart;
         this.accChart.setDragEnabled(true);
@@ -103,6 +108,8 @@ public class GraphView {
         this.rotationVectorY = new LinkedList<>();
         this.rotationVectorZ = new LinkedList<>();
         this.rotationVectorAnomalies = new LinkedList<>();
+
+        this.axis_size = 0;
     }
 
     public void clearGraph() {
@@ -125,6 +132,7 @@ public class GraphView {
         this.linChart.clear();
         this.linChart.resetZoom();
         this.linChart.invalidate();
+
     }
 
     public void draw(List<TimestampSpecificAnomalyMark> data) {
@@ -134,9 +142,9 @@ public class GraphView {
             Map<DataType, SimpleSensorData> sensorDataMap = entry.getCommonSensorDataMap();
 
             for (Map.Entry<DataType, SimpleSensorData> record : sensorDataMap.entrySet()) {
-                Entry xEntry = new Entry(entry.getTimestamp(), record.getValue().getLogs()[0]);
-                Entry yEntry = new Entry(entry.getTimestamp(), record.getValue().getLogs()[1]);
-                Entry zEntry = new Entry(entry.getTimestamp(), record.getValue().getLogs()[2]);
+                Entry xEntry = new Entry((float) entry.getTimestamp(), record.getValue().getLogs()[0]);
+                Entry yEntry = new Entry((float) entry.getTimestamp(), record.getValue().getLogs()[1]);
+                Entry zEntry = new Entry((float) entry.getTimestamp(), record.getValue().getLogs()[2]);
                 switch (record.getKey()) {
                     case accelerometerSensorData:
                         this.accelerometerX.add(xEntry);
@@ -177,6 +185,12 @@ public class GraphView {
             }
         }
 
+        System.out.println(this.accelerometerAnomalies.size());
+        System.out.println(this.gravityAnomalies.size());
+        System.out.println(this.gyroscopeAnomalies.size());
+        System.out.println(this.rotationVectorAnomalies.size());
+        System.out.println(this.linearAccelerationAnomalies.size());
+
         LineDataSet dataSet1 = new LineDataSet(this.accelerometerX, "Accelerometer X"); // add entries to dataset
         LineDataSet dataSet2 = new LineDataSet(this.accelerometerY, "Accelerometer Y"); // add entries to dataset
         LineDataSet dataSet3 = new LineDataSet(this.accelerometerZ, "Accelerometer Z"); // add entries to dataset
@@ -206,6 +220,10 @@ public class GraphView {
         dataSetA.setCircleColor(Color.RED);
         dataSetA.setColor(Color.RED);
 
+        dataSet1.setColor(Color.BLUE);
+        dataSet2.setColor(Color.GREEN);
+        dataSet3.setColor(Color.MAGENTA);
+
         List<ILineDataSet> accDataSets = new ArrayList<>();
         accDataSets.add(dataSet1);
         accDataSets.add(dataSet2);
@@ -215,6 +233,10 @@ public class GraphView {
         dataSetB.setCircleRadius(5f);
         dataSetB.setCircleColor(Color.RED);
         dataSetB.setColor(Color.RED);
+
+        dataSet4.setColor(Color.BLUE);
+        dataSet5.setColor(Color.GREEN);
+        dataSet6.setColor(Color.MAGENTA);
 
         List<ILineDataSet> gravDataSets = new ArrayList<>();
         gravDataSets.add(dataSet4);
@@ -226,6 +248,10 @@ public class GraphView {
         dataSetC.setCircleColor(Color.RED);
         dataSetC.setColor(Color.RED);
 
+        dataSet7.setColor(Color.BLUE);
+        dataSet8.setColor(Color.GREEN);
+        dataSet9.setColor(Color.MAGENTA);
+
         List<ILineDataSet> gyroDataSets = new ArrayList<>();
         gyroDataSets.add(dataSet7);
         gyroDataSets.add(dataSet8);
@@ -236,6 +262,10 @@ public class GraphView {
         dataSetD.setCircleColor(Color.RED);
         dataSetD.setColor(Color.RED);
 
+        dataSet10.setColor(Color.BLUE);
+        dataSet11.setColor(Color.GREEN);
+        dataSet12.setColor(Color.MAGENTA);
+
         List<ILineDataSet> rotDataSets = new ArrayList<>();
         rotDataSets.add(dataSet10);
         rotDataSets.add(dataSet11);
@@ -245,6 +275,10 @@ public class GraphView {
         dataSetE.setCircleRadius(5f);
         dataSetE.setCircleColor(Color.RED);
         dataSetE.setColor(Color.RED);
+
+        dataSet13.setColor(Color.BLUE);
+        dataSet14.setColor(Color.GREEN);
+        dataSet15.setColor(Color.MAGENTA);
 
         List<ILineDataSet> linDataSets = new ArrayList<>();
         linDataSets.add(dataSet13);
