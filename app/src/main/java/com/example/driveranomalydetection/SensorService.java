@@ -7,10 +7,13 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Binder;
+import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 
 import com.example.driveranomalydetection.exception.SensorException;
+import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import com.example.driveranomalydetection.sensor.SensorDataBatchProcessorImpl;
 import com.example.driveranomalydetection.sensor.SensorRawDataBatch;
 import com.example.driveranomalydetection.sensor.model.data.AccelerometerSensorData;
@@ -24,10 +27,14 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 
+import static java.lang.Thread.sleep;
+
 public class SensorService extends IntentService implements SensorEventListener {
 
     private static final int SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL;
     private static final int LOG_DELAY = 1000;
+    private final IBinder binder = new LocalBinder();
+    private boolean stopService = false;
 
     SensorManager sensorManager;
     Sensor accelerometerSensor, gyroscopeSensor, gravitySensor, linearAccelerationSensor, RotationVectorSensor;
@@ -44,48 +51,60 @@ public class SensorService extends IntentService implements SensorEventListener 
     ArrayList<LinearAccelerationSensorData> linearAccelerationSensorDataList = new ArrayList<>();
     ArrayList<RotationVectorSensorData> rotationVectorSensorDataList = new ArrayList<>();
 
-
     public SensorService() {
         super("SensorService");
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        getSystemSensors();
+        registerSensors();
+        batchScheduler();
+    }
+
+    public class LocalBinder extends Binder {
+        SensorService getService() {
+            return SensorService.this;
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+
+    public SensorDataBatch getSensorDataBatch() {
+        return sensorBatch.getSensorDataBatch();
+    }
+
+    private void getSystemSensors() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         linearAccelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         RotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        registerSensors();
-        batchScheduler();
     }
 
-    private void batchScheduler() {
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while(true) {
-                        sleep(LOG_DELAY);
-                        long batchTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - LOG_DELAY;
-                        sensorBatch.prepareBatch(SensorRawDataBatch.builder()
-                                .batchTimestamp(batchTimestamp)
-                                .accelerometerSensorDataList(accelerometerSensorDataList)
-                                .gravitySensorDataList(gravitySensorDataList)
-                                .gyroscopeSensorDataList(gyroscopeSensorDataList)
-                                .linearAccelerationSensorDataList(linearAccelerationSensorDataList)
-                                .rotationVectorSensorDataList(rotationVectorSensorDataList)
-                                .build()
-                        );
-                        clear();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+    private void batchScheduler(){
+        try {
+            while (!stopService) {
+                sleep(LOG_DELAY);
+                long batchTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - LOG_DELAY;
+                sensorBatch.prepareBatch(SensorRawDataBatch.builder()
+                        .batchTimestamp(batchTimestamp)
+                        .accelerometerSensorDataList(accelerometerSensorDataList)
+                        .gravitySensorDataList(gravitySensorDataList)
+                        .gyroscopeSensorDataList(gyroscopeSensorDataList)
+                        .linearAccelerationSensorDataList(linearAccelerationSensorDataList)
+                        .rotationVectorSensorDataList(rotationVectorSensorDataList)
+                        .build()
+                );
+                clear();
             }
-        };
-        thread.start();
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void clear() {
@@ -103,7 +122,6 @@ public class SensorService extends IntentService implements SensorEventListener 
         sensorManager.registerListener(this, linearAccelerationSensor, SENSOR_DELAY);
         sensorManager.registerListener(this, RotationVectorSensor, SENSOR_DELAY);
     }
-
 
     @SneakyThrows
     @Override
@@ -132,6 +150,13 @@ public class SensorService extends IntentService implements SensorEventListener 
             default:
                 throw new SensorException("Sensor Not Found");
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        this.stopService = true;
+
+        stopSelf();
     }
 
     @Override

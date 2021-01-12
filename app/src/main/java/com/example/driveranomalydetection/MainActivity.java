@@ -4,9 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.Button;
 import android.widget.PopupMenu;
@@ -53,12 +57,21 @@ public class MainActivity extends AppCompatActivity {
     ScrollView charts;
     static final Integer PICK_FILE_REQUEST = 2;
     static final Integer FILE_BATCH_DELAY = 1000;
+    static final Integer REAL_TIME_BATCH_DELAY = 1000;
+    Intent sensorService;
+    SensorService mSensorService;
+    boolean realTimeDetectionRunning = false;
+    boolean mBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         requestPermissions();
+
+        sensorService = new Intent(this, SensorService.class);
+        bindService(sensorService, connection, Context.BIND_AUTO_CREATE);
+
         anomalyDetector = new GaussianAnomalyDetector();
         anomalyDetector.loadDataFromFile("/data/data/com.example.driveranomalydetection/files/SampleData.csv");
 //        List<TimestampSpecificAnomalyMark> tmp = anomalyDetector.predictForWholeData(); Function for test purpose it might disappear in the future
@@ -75,6 +88,21 @@ public class MainActivity extends AppCompatActivity {
         clearButton = (Button) findViewById(R.id.clearButton);
         graphView = new GraphView(accChart, gravChart, gyroChart, linChart, rotChart);
     }
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            SensorService.LocalBinder binder = (SensorService.LocalBinder) service;
+            mSensorService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 
     public void clearGraphs(View view) {
         graphView.clearGraph();
@@ -111,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         return lines;
     }
 
-    public void handleMenuSwitch(View v){
+    public void handleMenuSwitch(View v) {
         PopupMenu popup = new PopupMenu(MainActivity.this, menuSwitch);
         popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());
         popup.setOnMenuItemClickListener(item -> {
@@ -126,17 +154,56 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonStartClick(View v) {
-        Intent sensorService = new Intent(this, SensorService.class);
-        startService(sensorService);
-        buttonStart.setEnabled(false);
+        realTimeDetectionRunning = !realTimeDetectionRunning;
+        if (realTimeDetectionRunning) {
+            startService(sensorService);
+            if(!mBound) {
+                bindService(sensorService, connection, Context.BIND_AUTO_CREATE);
+            }
+            buttonStart.setText(getResources().getString(R.string.stop_log_sensors_data));
+            detectOnRealTimeData();
+        } else {
+            unbindService(connection);
+            mBound = false;
+            stopService(sensorService);
+            buttonStart.setText(getResources().getString(R.string.start_log_sensors_data));
+        }
     }
 
-    public void detectAnomaly(SensorDataBatch batch){
+    public void detectAnomaly(SensorDataBatch batch) {
         /* Run class for anomaly detection */
         anomalyDetector.putData(batch);
         // List<TimestampAnomalyMark> anomalies = anomalyDetector.detectAnomalyType(batch);
         List<TimestampSpecificAnomalyMark> data = anomalyDetector.detectAnomalyTypeSpecific(batch);
         graphView.draw(data);
+    }
+
+    private void detectOnRealTimeData() {
+        try {
+            sleep(3000);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        if (mBound) {
+                            SensorDataBatch sensorDataBatch = mSensorService.getSensorDataBatch();
+                            if (sensorDataBatch.getRows() != null && sensorDataBatch.getRows().size() > 0) {
+                                detectAnomaly(sensorDataBatch);
+                            }
+                        }
+                        sleep(REAL_TIME_BATCH_DELAY);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        };
+        thread.start();
     }
 
     private void loadBatchFile(Intent resultData) {
@@ -159,9 +226,10 @@ public class MainActivity extends AppCompatActivity {
         };
         thread.start();
     }
+
     private void fileBatchScheduler(ArrayList<SensorDataBatch> sensorDataBatches) {
         try {
-            for(SensorDataBatch batch : sensorDataBatches) {
+            for (SensorDataBatch batch : sensorDataBatches) {
                 sleep(FILE_BATCH_DELAY);
                 long batchTimestamp = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
                 batch.setBatchTimestamp(batchTimestamp);
@@ -189,5 +257,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Forward results to EasyPermissions
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(connection);
+        mBound = false;
     }
 }
