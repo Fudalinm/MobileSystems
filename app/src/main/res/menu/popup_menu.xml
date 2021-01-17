@@ -3,4 +3,10 @@
     <item
         android:id="@+id/one"
         android:title="Gaussian outliers" />
+    <item
+        android:id="@+id/two"
+        android:title="Density based method" />
+    <item
+        android:id="@+id/three"
+        android:title="Euclidean threshold" />
 </menu>

@@ -137,6 +137,12 @@ public class GraphView {
 
     public void draw(List<TimestampSpecificAnomalyMark> data) {
 
+        this.accChart.clear();
+        this.gyroChart.clear();
+        this.gravChart.clear();
+        this.linChart.clear();
+        this.rotChart.clear();
+
         for (TimestampSpecificAnomalyMark entry : data) {
             Map<DataType, AnomalyType> anomalyTypeMap = entry.getAnomalyTypeMap();
             Map<DataType, SimpleSensorData> sensorDataMap = entry.getCommonSensorDataMap();

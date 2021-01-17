@@ -9,9 +9,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.PopupMenu;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.example.driveranomalydetection.DrivingAnalyzer.AnomalyDetector;
 import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.DensityAnomalyDetector;
+import com.example.driveranomalydetection.DrivingAnalyzer.EuclideanAnomalyDetector;
 import com.example.driveranomalydetection.DrivingAnalyzer.GaussianAnomalyDetector;
 import com.example.driveranomalydetection.DrivingAnalyzer.GraphView;
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
@@ -60,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestPermissions();
         anomalyDetector = new GaussianAnomalyDetector();
-        anomalyDetector.loadDataFromFile("/data/data/com.example.driveranomalydetection/files/SampleData.csv");
+//        anomalyDetector.loadDataFromFile("/data/data/com.example.driveranomalydetection/files/SampleData.csv");
 //        List<TimestampSpecificAnomalyMark> tmp = anomalyDetector.predictForWholeData(); Function for test purpose it might disappear in the future
         buttonStart = (Button) findViewById(R.id.button_start);
         menuSwitch = (Button) findViewById(R.id.menuSwitch);
@@ -117,8 +121,12 @@ public class MainActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(item -> {
             anomalyName.setText(item.getTitle());
             CharSequence title = item.getTitle();
-            if ("Gaussian outliers".equals(title)) {
+            if ("Gaussian outliers".contentEquals(title)) {
                 anomalyDetector = new GaussianAnomalyDetector();
+            } else if ("Density based method".contentEquals(title)) {
+                anomalyDetector = new DensityAnomalyDetector();
+            } else if ("Euclidean threshold".contentEquals(title)) {
+                anomalyDetector = new EuclideanAnomalyDetector();
             }
             return true;
         });
@@ -134,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
     public void detectAnomaly(SensorDataBatch batch){
         /* Run class for anomaly detection */
         anomalyDetector.putData(batch);
-        // List<TimestampAnomalyMark> anomalies = anomalyDetector.detectAnomalyType(batch);
         List<TimestampSpecificAnomalyMark> data = anomalyDetector.detectAnomalyTypeSpecific(batch);
         graphView.draw(data);
     }
