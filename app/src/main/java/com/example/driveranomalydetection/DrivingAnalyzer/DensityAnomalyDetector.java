@@ -11,6 +11,7 @@ import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecific
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import com.example.driveranomalydetection.sensor.SensorDataBatchRow;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -138,7 +139,8 @@ public class DensityAnomalyDetector implements AnomalyDetector {
     }
     
     private Integer[] countNeighbours(DataType dt,Float[] x){
-        Integer toRet[] = new Integer[dt.getDim()];
+        Integer toRet[] = new Integer[dt.getDim()]; // bad initializaion it was
+        Arrays.fill(toRet, 0);
         for(SimpleTimestampData std :this.data.getData()){
             Float[] pointLogs = std.getTimestampSensorDataMap().get(dt).getLogs();
             Boolean[] isNeighbour = isNeighbour(dt,x,pointLogs);
