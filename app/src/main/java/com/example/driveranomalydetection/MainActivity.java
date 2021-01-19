@@ -9,8 +9,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.PopupMenu;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,11 +25,11 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.example.driveranomalydetection.DrivingAnalyzer.AnomalyDetector;
-import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampAnomalyMark;
 import com.example.driveranomalydetection.DrivingAnalyzer.Data.TimestampSpecificAnomalyMark;
+import com.example.driveranomalydetection.DrivingAnalyzer.DensityAnomalyDetector;
+import com.example.driveranomalydetection.DrivingAnalyzer.EuclideanAnomalyDetector;
 import com.example.driveranomalydetection.DrivingAnalyzer.GaussianAnomalyDetector;
 import com.example.driveranomalydetection.DrivingAnalyzer.GraphView;
-import com.example.driveranomalydetection.DrivingAnalyzer.KnnAnomalyDetector;
 import com.example.driveranomalydetection.sensor.SensorDataBatch;
 import com.example.driveranomalydetection.sensor.SensorFileProcessor;
 import com.example.driveranomalydetection.sensor.SensorFileProcessorImpl;
@@ -43,9 +46,15 @@ public class MainActivity extends AppCompatActivity {
     Button loadData;
     AnomalyDetector anomalyDetector;
     Button menuSwitch;
+    Button clearButton;
     TextView anomalyName;
-    LineChart chart;
+    LineChart accChart;
+    LineChart linChart;
+    LineChart gravChart;
+    LineChart gyroChart;
+    LineChart rotChart;
     GraphView graphView;
+    ScrollView charts;
     static final Integer PICK_FILE_REQUEST = 2;
     static final Integer FILE_BATCH_DELAY = 1000;
 
@@ -55,14 +64,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestPermissions();
         anomalyDetector = new GaussianAnomalyDetector();
-        anomalyDetector.loadDataFromFile("/data/data/com.example.driveranomalydetection/files/SampleData.csv");
+//        anomalyDetector.loadDataFromFile("/data/data/com.example.driveranomalydetection/files/SampleData.csv");
 //        List<TimestampSpecificAnomalyMark> tmp = anomalyDetector.predictForWholeData(); Function for test purpose it might disappear in the future
         buttonStart = (Button) findViewById(R.id.button_start);
         menuSwitch = (Button) findViewById(R.id.menuSwitch);
         anomalyName = (TextView) findViewById(R.id.anomalyName);
-        chart = (LineChart) findViewById(R.id.chart);
-        graphView = new GraphView(chart);
+        charts = (ScrollView) findViewById(R.id.charts);
+        accChart = (LineChart) findViewById(R.id.accChart);
+        gravChart = (LineChart) findViewById(R.id.gravChart);
+        gyroChart = (LineChart) findViewById(R.id.gyroChart);
+        linChart = (LineChart) findViewById(R.id.linChart);
+        rotChart = (LineChart) findViewById(R.id.rotChart);
         loadData = (Button) findViewById(R.id.loadData);
+        clearButton = (Button) findViewById(R.id.clearButton);
+        graphView = new GraphView(accChart, gravChart, gyroChart, linChart, rotChart);
+    }
+
+    public void clearGraphs(View view) {
+        graphView.clearGraph();
     }
 
     public void openFile(View view) {
@@ -102,10 +121,12 @@ public class MainActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(item -> {
             anomalyName.setText(item.getTitle());
             CharSequence title = item.getTitle();
-            if ("Gaussian outliers".equals(title)) {
+            if ("Gaussian outliers".contentEquals(title)) {
                 anomalyDetector = new GaussianAnomalyDetector();
-            } else if ("k-NN outliers".equals(title)) {
-                anomalyDetector = new KnnAnomalyDetector();
+            } else if ("Density based method".contentEquals(title)) {
+                anomalyDetector = new DensityAnomalyDetector();
+            } else if ("Euclidean threshold".contentEquals(title)) {
+                anomalyDetector = new EuclideanAnomalyDetector();
             }
             return true;
         });
@@ -121,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
     public void detectAnomaly(SensorDataBatch batch){
         /* Run class for anomaly detection */
         anomalyDetector.putData(batch);
-        List<TimestampAnomalyMark> anomalies = anomalyDetector.detectAnomalyType(batch);
         List<TimestampSpecificAnomalyMark> data = anomalyDetector.detectAnomalyTypeSpecific(batch);
         graphView.draw(data);
     }
@@ -146,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
         };
         thread.start();
     }
-
     private void fileBatchScheduler(ArrayList<SensorDataBatch> sensorDataBatches) {
         try {
             for(SensorDataBatch batch : sensorDataBatches) {
@@ -159,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
             ex.printStackTrace();
         }
     }
-
 
     private void requestPermissions() {
         String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,

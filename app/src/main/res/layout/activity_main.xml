@@ -11,6 +11,8 @@
         android:id="@+id/button_start"
         android:layout_width="153dp"
         android:layout_height="69dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
         android:onClick="buttonStartClick"
         android:text="@string/start_log_sensors_data"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -22,34 +24,35 @@
 
     <Button
         android:id="@+id/loadData"
-        android:layout_width="150dp"
-        android:layout_height="60dp"
-        android:background="#532BE9"
-        android:backgroundTint="#532BE9"
-        android:enabled="true"
+        android:layout_width="153dp"
+        android:layout_height="69dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
         android:onClick="openFile"
-        android:text="load data"
+        android:text="@string/load_data"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.34"
+        app:layout_constraintHorizontal_bias="0.317"
         app:layout_constraintStart_toEndOf="@+id/textView"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.056" />
+        app:layout_constraintVertical_bias="0.057" />
 
     <Button
         android:id="@+id/menuSwitch"
-        android:layout_width="63dp"
-        android:layout_height="63dp"
+        android:layout_width="58dp"
+        android:layout_height="51dp"
         android:layout_marginTop="8dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
         android:onClick="handleMenuSwitch"
         android:text=">"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.201"
+        app:layout_constraintHorizontal_bias="0.093"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/loadData"
-        app:layout_constraintVertical_bias="0.038" />
+        app:layout_constraintVertical_bias="0.046" />
 
     <TextView
         android:id="@+id/anomalyName"
@@ -81,15 +84,58 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.083" />
 
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/chart"
-        android:layout_width="406dp"
-        android:layout_height="397dp"
+    <ScrollView
+        android:id="@+id/charts"
+        android:layout_width="404dp"
+        android:layout_height="504dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.4"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/anomalyName"
-        app:layout_constraintVertical_bias="0.635" />
+        app:layout_constraintTop_toBottomOf="@+id/anomalyName">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/accChart"
+                android:layout_width="403dp"
+                android:layout_height="114dp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/gravChart"
+                android:layout_width="403dp"
+                android:layout_height="114dp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/gyroChart"
+                android:layout_width="403dp"
+                android:layout_height="114dp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/linChart"
+                android:layout_width="403dp"
+                android:layout_height="114dp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/rotChart"
+                android:layout_width="403dp"
+                android:layout_height="114dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/clearButton"
+        android:layout_width="81dp"
+        android:layout_height="51dp"
+        android:onClick="clearGraphs"
+        android:text="Clear"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/anomalyName"
+        app:layout_constraintTop_toBottomOf="@+id/loadData"
+        app:layout_constraintVertical_bias="0.059" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

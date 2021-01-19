@@ -12,10 +12,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SensorDataBatch {
+
     Long batchTimestamp;
     ArrayList<SensorDataBatchRow> rows;
 
     public ArrayList<SensorDataBatchRow> getRows() {
         return rows;
+    }
+    public void setBatchTimestamp(long timestamp) {
+        this.batchTimestamp = timestamp;
+    }
+    public void setRows(ArrayList<SensorDataBatchRow> rows) {
+        this.rows = rows;
     }
 }
